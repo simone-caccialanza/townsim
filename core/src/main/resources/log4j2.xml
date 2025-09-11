@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="DEBUG" monitorInterval="30">
+    <Appenders>
+        <Console name="ConsoleFull" target="SYSTEM_OUT">
+            <PatternLayout disableAnsi="false"
+                           pattern="%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}}%highlight{${LOG_LEVEL_PATTERN:-%5p}}{FATAL=red blink,ERROR=red,WARN=yellow bold,INFO=green,DEBUG=green bold,TRACE=blue} %style{%c}{cyan}: %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%xEx}"/>
+        </Console>
+        <Console name="ConsoleLight" target="SYSTEM_OUT">
+            <PatternLayout disableAnsi="false"
+                           pattern="%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}}%highlight{${LOG_LEVEL_PATTERN:-%5p}}{FATAL=red blink,ERROR=red,WARN=yellow bold,INFO=green,DEBUG=green bold,TRACE=blue}: %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%xEx}"/>
+        </Console>
+
+        <Async name="AsyncConsole">
+            <AppenderRef ref="${sys:consoleAppender:-ConsoleLight}"/>
+        </Async>
+        <Routing name="profileFileRouter">
+            <Routes pattern="${sys:enableProfileLogger:-false}">
+                <Route key="true">
+                    <RollingFile name="profileFileLogger"
+                                 fileName="logs/profiler-${date:yyyy-MM-dd_HH-mm-ss}.log"
+                                 filePattern="logs/profiler-%d{yyyy-MM-dd_HH-mm-ss}.log">
+                        <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t] %c{1}.%M : %m%n"/>
+                        <Policies>
+                            <TimeBasedTriggeringPolicy/>
+                        </Policies>
+                        <DefaultRolloverStrategy max="5"/>
+                    </RollingFile>
+                </Route>
+            </Routes>
+        </Routing>
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="AsyncConsole"/>
+        </Root>
+        <Logger name="profileFileLogger" level="debug" additivity="false">
+            <AppenderRef ref="profileFileRouter"/>
+        </Logger>
+    </Loggers>
+</Configuration>
+

@@ -1,0 +1,46 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "assets/maps/map1.tmx",
+    "expandedProjectPaths": [
+        "assets/maps",
+        ".",
+        "lwjgl3/build",
+        "assets",
+        "assets/tiles",
+        "lwjgl3/build/resources",
+        "lwjgl3/build/resources/main/ui",
+        "lwjgl3/build/resources/main"
+    ],
+    "file.lastUsedOpenFilter": "Tutti i file (*)",
+    "fileStates": {
+        "assets/maps/kenney_tiny-town.tsx": {
+            "scaleInDock": 1.5,
+            "scaleInEditor": 3
+        },
+        "assets/maps/map1.tmx": {
+            "scale": 1.5,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 185.33333333333331,
+                "y": 224.66666666666669
+            }
+        }
+    },
+    "last.imagePath": "C:/Users/simon/IdeaProjects/townsim/assets/kenney_tiny-town/Tilemap",
+    "map.lastUsedFormat": "tmx",
+    "openFiles": [
+        "assets/maps/kenney_tiny-town.tsx",
+        "assets/maps/map1.tmx"
+    ],
+    "project": "TownsimMap.tiled-project",
+    "recentFiles": [
+        "assets/maps/kenney_tiny-town.tsx",
+        "assets/maps/map1.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.margin": 1,
+    "tileset.spacing": 1
+}
