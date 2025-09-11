@@ -19,6 +19,7 @@ public final class Constants {
     public static final int SPRITE_ASCII_COMPONENT_TABLE_INDEX = 12;
     public static final int TASK_COMPONENT_TABLE_INDEX = 13;
     public static final int THIRST_COMPONENT_TABLE_INDEX = 14;
+
     private Constants() {
     }
 

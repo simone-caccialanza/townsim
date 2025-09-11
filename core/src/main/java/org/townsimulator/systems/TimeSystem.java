@@ -23,9 +23,9 @@ public class TimeSystem extends ECSSystem<TimeSystem> {
         //TODO parametrize this, hardcoded for demo
         Set<Archetype> allArchetypesWithHunger = ArchetypeManager.allArchetypesWithType(Hunger.Component.class);
         Vector<Hunger.Component> allHungerComponents = new Vector<>(allArchetypesWithHunger.stream()
-                .flatMap(archetype ->
-                        archetype.getComponentsOfType(Hunger.Component.class).stream())
-                .toList()
+            .flatMap(archetype ->
+                archetype.getComponentsOfType(Hunger.Component.class).stream())
+            .toList()
         );
 
         allHungerComponents.forEach(hungerComponent -> {

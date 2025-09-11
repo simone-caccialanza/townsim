@@ -17,7 +17,7 @@ public class CustomFieldsLogging {
     public static <T> String toString(T obj) {
         StringBuilder stringBuilder = new StringBuilder();
         List<Field> fields = Arrays.stream(obj.getClass().getDeclaredFields())
-                .filter(field -> field.isAnnotationPresent(LogField.class)).toList();
+            .filter(field -> field.isAnnotationPresent(LogField.class)).toList();
         stringBuilder.append("\n");
         for (Field field : fields) {
             field.setAccessible(true);

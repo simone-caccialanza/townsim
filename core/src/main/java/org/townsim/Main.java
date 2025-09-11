@@ -13,15 +13,15 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.utils.ScreenUtils;
 import jecs.core.EntityManager;
-import jecs.core.Game;
 import org.townsimulator.GlobalGrid;
 import org.townsimulator.components.*;
 import org.townsimulator.game.loader.TSGameLoader;
 
 import static org.townsimulator.game.logic.GameLogicStore.BASE_LOGIC_MOVEMENT_HUNGER_FOODSUPPLY;
-import static org.townsimulator.game.logic.GameLogicStore.BASE_LOGIC_MOVEMENT_ONLY;
 
-/** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
+/**
+ * {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms.
+ */
 public class Main extends ApplicationAdapter implements InputProcessor {
     private OrthographicCamera camera;
     private TiledMap map;
@@ -134,8 +134,8 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
     // Unused methods (you can return false or ignore them)
     public boolean keyDown(int keycode) {
-        float Xstep = 960/30;
-        float Ystep = 640/20;
+        float Xstep = 960 / 30;
+        float Ystep = 640 / 20;
 
         switch (keycode) {
             case Input.Keys.W:
@@ -165,21 +165,33 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         }
         return true;
     }
-    public boolean keyUp(int keycode) { return false; }
-    public boolean keyTyped(char character) { return false; }
-    public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {return false; }
-    public boolean mouseMoved(int screenX, int screenY) { return false; }
 
-    void createCollisionGame(){
+    public boolean keyUp(int keycode) {
+        return false;
+    }
+
+    public boolean keyTyped(char character) {
+        return false;
+    }
+
+    public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
+        return false;
+    }
+
+    public boolean mouseMoved(int screenX, int screenY) {
+        return false;
+    }
+
+    void createCollisionGame() {
         EntityManager.createEntity(
-            new Movement.Component(32, 32, 960*6/30, 640*11/20),
-            new Position.Component(960*6/30, 640*11/20, true),
+            new Movement.Component(32, 32, 960 * 6 / 30, 640 * 11 / 20),
+            new Position.Component(960 * 6 / 30, 640 * 11 / 20, true),
             new SpriteASCII.Component('A'),
             new Hunger.Component(100.0f),
             new Task.Component()
         );
         EntityManager.createEntity(
-            new Position.Component(960*16/30, 640*5/20, true),
+            new Position.Component(960 * 16 / 30, 640 * 5 / 20, true),
             new FoodProvider.Component(1)
         );
 

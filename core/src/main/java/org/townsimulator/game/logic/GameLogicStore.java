@@ -5,7 +5,6 @@ import org.townsimulator.systems.FoodProvidingSystem;
 import org.townsimulator.systems.HungerSystem;
 import org.townsimulator.systems.MovementSystem;
 import org.townsimulator.systems.TaskSystem;
-import org.townsimulator.utils.PrintUtils;
 
 public class GameLogicStore {
 

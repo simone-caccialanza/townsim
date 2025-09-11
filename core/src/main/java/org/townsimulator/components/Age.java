@@ -16,7 +16,7 @@ public final class Age {
     @JecsComponent
     public static final class Component extends ComponentBase {
         @LogField
-        private LocalDateTime birthDate;
+        private final LocalDateTime birthDate;
 
         public Component(Integer age) {
             this.birthDate = LocalDateTime.now().minusYears(age);

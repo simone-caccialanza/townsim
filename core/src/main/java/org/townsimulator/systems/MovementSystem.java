@@ -30,7 +30,7 @@ public class MovementSystem extends ECSSystem<MovementSystem> {
     @Override
     public void run() {
         Set<Archetype> archetypes = ArchetypeManager.allArchetypesWithType(
-            Position.Component.class, Movement.Component.class, SpriteASCII.Component.class).stream()
+                Position.Component.class, Movement.Component.class, SpriteASCII.Component.class).stream()
             .filter(a -> !a.isEmpty()).collect(Collectors.toSet());
 
         Map<String, Position.Component> positionMap = new HashMap<>();

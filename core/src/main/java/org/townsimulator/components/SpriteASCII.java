@@ -25,7 +25,8 @@ public final class SpriteASCII {
 
         public Component(char spriteCharacter, int x, int y) {
             this.spriteCharacter = spriteCharacter;
-            GlobalGrid.getInstance().getInstance().cellAt(x, y).spriteCharacter = spriteCharacter;
+            GlobalGrid.getInstance();
+            GlobalGrid.getInstance().cellAt(x, y).spriteCharacter = spriteCharacter;
         }
 
         @Override

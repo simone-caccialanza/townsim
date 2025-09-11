@@ -55,11 +55,11 @@ public class HungerSystem extends ECSSystem<HungerSystem> {
 
         // Step 2: Per ciascun entityId che ha fame, assegna il task "GoTo" verso il food provider più vicino
         Set<Archetype> allArchsWithPositionAndFoodProvider = ArchetypeManager.allArchetypesWithType(
-                Position.Component.class, FoodProvider.Component.class
+            Position.Component.class, FoodProvider.Component.class
         );
         List<Position.Component> allFoodProvidersPositions = allArchsWithPositionAndFoodProvider.stream()
-                .flatMap(arch -> arch.getComponentsOfType(Position.Component.class).stream())
-                .toList();
+            .flatMap(arch -> arch.getComponentsOfType(Position.Component.class).stream())
+            .toList();
 
         for (int entityId : entitiesToAssignTasks) {
             Position.Component entityPosition = EntityManager.getComponent(entityId, Position.Component.class);
