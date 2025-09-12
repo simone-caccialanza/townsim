@@ -18,7 +18,7 @@ class GameLoaderTest {
 
     @Test
     void globalConstants() {
-        Assertions.assertEquals(2, GlobalConstants.FPS);
+        Assertions.assertEquals(2, GlobalConstants.TICK_PER_SECOND);
     }
 
     @Test

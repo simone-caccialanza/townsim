@@ -5,14 +5,14 @@ import jecs.core.clocks.GameClock;
 
 import java.util.function.Consumer;
 
-import static jecs.core.utils.GlobalConstants.FPS;
+import static jecs.core.utils.GlobalConstants.TICK_PER_SECOND;
 import static jecs.core.utils.GlobalMutable.running;
 
 public class GameLoopStore {
 
     public static final Consumer<GameLogic> BASE_LOOP = (gl) -> {
         while (running) {
-            if (GameClock.ticks > 100) break;
+            if (GameClock.ticks > 1000) break;
 
             GameClock.update();
             long startLoopTime = System.nanoTime();
@@ -22,7 +22,7 @@ public class GameLoopStore {
             }
 
             long elapsedTime = System.nanoTime() - startLoopTime; // Time taken by the loop
-            long sleepTime = 1_000_000_000 / FPS - elapsedTime; // Nanosecond per frame time
+            long sleepTime = 1_000_000_000 / TICK_PER_SECOND - elapsedTime; // Nanosecond per frame time
 
             if (sleepTime > 0) {
                 try {

@@ -22,7 +22,7 @@ public class CollisionsGame {
             }
 
             long elapsedTime = System.nanoTime() - startLoopTime;
-            long sleepTime = (long) (1000000000 / GlobalConstants.FPS) - elapsedTime;
+            long sleepTime = (long) (1000000000 / GlobalConstants.TICK_PER_SECOND) - elapsedTime;
             if (sleepTime > 0L) {
                 try {
                     Thread.sleep(sleepTime / 1000000L);
