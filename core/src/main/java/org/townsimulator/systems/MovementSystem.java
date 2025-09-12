@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.townsimulator.GlobalGrid;
 import org.townsimulator.components.Movement;
 import org.townsimulator.components.Position;
+import org.townsimulator.components.TSSprite;
 import org.townsimulator.components.SpriteASCII;
 
 import java.util.*;
@@ -30,25 +31,29 @@ public class MovementSystem extends ECSSystem<MovementSystem> {
     @Override
     public void run() {
         Set<Archetype> archetypes = ArchetypeManager.allArchetypesWithType(
-                Position.Component.class, Movement.Component.class, SpriteASCII.Component.class).stream()
+                Position.Component.class, Movement.Component.class, SpriteASCII.Component.class, TSSprite.Component.class).stream()
             .filter(a -> !a.isEmpty()).collect(Collectors.toSet());
 
         Map<String, Position.Component> positionMap = new HashMap<>();
         Map<Position.Component, Movement.Component> movementMap = new HashMap<>();
-        Map<Position.Component, SpriteASCII.Component> spriteMap = new HashMap<>();
+        Map<Position.Component, SpriteASCII.Component> asciiSpriteMap = new HashMap<>();
+        Map<Position.Component, TSSprite.Component> spriteMap = new HashMap<>();
 
         for (Archetype archetype : archetypes) {
             var positions = archetype.getComponentsOfType(Position.Component.class);
             var movements = archetype.getComponentsOfType(Movement.Component.class);
-            var sprites = archetype.getComponentsOfType(SpriteASCII.Component.class);
+            var asciiSprites = archetype.getComponentsOfType(SpriteASCII.Component.class);
+            var sprites = archetype.getComponentsOfType(TSSprite.Component.class);
 
             for (int i = 0; i < positions.size(); i++) {
                 Position.Component pos = positions.get(i);
                 Movement.Component mov = movements.get(i);
-                SpriteASCII.Component spr = sprites.get(i);
+                SpriteASCII.Component asciiSpr = asciiSprites.get(i);
+                TSSprite.Component spr = sprites.get(i);
                 String key = (int) pos.xPos + "," + (int) pos.yPos;
                 positionMap.put(key, pos);
                 movementMap.put(pos, mov);
+                asciiSpriteMap.put(pos, asciiSpr);
                 spriteMap.put(pos, spr);
             }
         }
@@ -61,12 +66,14 @@ public class MovementSystem extends ECSSystem<MovementSystem> {
         for (Archetype archetype : archetypes) {
             var positions = archetype.getComponentsOfType(Position.Component.class);
             var movements = archetype.getComponentsOfType(Movement.Component.class);
-            var sprites = archetype.getComponentsOfType(SpriteASCII.Component.class);
+            var asciiSprites = archetype.getComponentsOfType(SpriteASCII.Component.class);
+            var sprites = archetype.getComponentsOfType(TSSprite.Component.class);
 
             for (int i = 0; i < positions.size(); i++) {
                 Position.Component pos = positions.get(i);
                 Movement.Component mov = movements.get(i);
-                SpriteASCII.Component sprite = sprites.get(i);
+                SpriteASCII.Component asciiSprite = asciiSprites.get(i);
+                TSSprite.Component sprite = sprites.get(i);
 
                 if (!mov.wantsToMove || movedThisFrame.contains(pos)) continue;
 
@@ -151,13 +158,18 @@ public class MovementSystem extends ECSSystem<MovementSystem> {
                                         movedThisFrame.add(pos);
                                         movedThisFrame.add(occupying);
 
-                                        SpriteASCII.Component theirSprite = spriteMap.get(occupying);
+                                        SpriteASCII.Component theirAsciiSprite = asciiSpriteMap.get(occupying);
 
-                                        grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = sprite.spriteCharacter;
+                                        grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = asciiSprite.spriteCharacter;
                                         grid.setBlocked((int) pos.xPos, (int) pos.yPos, pos.blocksTile);
+                                        sprite.activeSprite.setPosition(pos.xPos, pos.yPos);
 
-                                        grid.cellAt((int) occupying.xPos, (int) occupying.yPos).spriteCharacter = theirSprite.spriteCharacter;
+                                        grid.cellAt((int) occupying.xPos, (int) occupying.yPos).spriteCharacter = theirAsciiSprite.spriteCharacter;
                                         grid.setBlocked((int) occupying.xPos, (int) occupying.yPos, occupying.blocksTile);
+
+                                        TSSprite.Component theirSprite = spriteMap.get(occupying);
+                                        theirSprite.activeSprite.setPosition(occupying.xPos, occupying.yPos);
+
 
                                         log.debug("Swapped {} with {}", pos, occupying);
                                     });
@@ -186,7 +198,8 @@ public class MovementSystem extends ECSSystem<MovementSystem> {
                     mov.pathIndex += finalStepsTaken;
                     movedThisFrame.add(pos);
 
-                    grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = sprite.spriteCharacter;
+                    grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = asciiSprite.spriteCharacter;
+                    sprite.activeSprite.setPosition(pos.xPos, pos.yPos);
                     grid.setBlocked((int) pos.xPos, (int) pos.yPos, pos.blocksTile);
 
                     if ((int) pos.xPos == (int) mov.xDst && (int) pos.yPos == (int) mov.yDst) {
@@ -202,7 +215,7 @@ public class MovementSystem extends ECSSystem<MovementSystem> {
 
         positionMap.clear();
         movementMap.clear();
-        spriteMap.clear();
+        asciiSpriteMap.clear();
     }
 
     static class AStar {

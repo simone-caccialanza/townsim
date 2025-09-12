@@ -15,7 +15,10 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import jecs.core.EntityManager;
 import org.townsimulator.GlobalGrid;
 import org.townsimulator.components.*;
+import org.townsimulator.components.manager.SpriteManager;
 import org.townsimulator.game.loader.TSGameLoader;
+
+import java.util.List;
 
 import static org.townsimulator.game.logic.GameLogicStore.BASE_LOGIC_MOVEMENT_HUNGER_FOODSUPPLY;
 
@@ -63,6 +66,8 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
 
         gLoop.step();
+        // Il MovementSystem deve aggiornare il component Sprite
+
         playerSprite.setPosition(EntityManager.getComponent(0, Position.Component.class).xPos, EntityManager.getComponent(0, Position.Component.class).yPos);
 //        playerSprite.setPosition(960*6/30, 640*11/20);
 
@@ -72,7 +77,9 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        playerSprite.draw(batch);
+        // Bisogna implementare una logica che vada diretta sui soli sprite da disegnare
+        SpriteManager.getActiveSprites().forEach(sprite -> sprite.draw(batch));
+//        playerSprite.draw(batch);
         batch.end();
     }
 
@@ -183,10 +190,20 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     }
 
     void createCollisionGame() {
+        var sprites = SpriteManager.createSprite(
+            List.of("blue_man_walking_left.png",
+                "blue_man_walking_right.png",
+                "blue_man_walking_vertical.png")
+        );
+        var tsSpriteComponent = new TSSprite.Component(12);
+        tsSpriteComponent.sprites = sprites;
+        tsSpriteComponent.activeSprite = tsSpriteComponent.sprites[0];
+
         EntityManager.createEntity(
             new Movement.Component(32, 32, 960 * 6 / 30, 640 * 11 / 20),
             new Position.Component(960 * 6 / 30, 640 * 11 / 20, true),
             new SpriteASCII.Component('A'),
+            tsSpriteComponent,
             new Hunger.Component(100.0f),
             new Task.Component()
         );
