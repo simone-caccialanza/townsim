@@ -1,4 +1,5 @@
 # TownSim
+⚠️ WIP project ⚠️
 Implementation of a tiled game using my ECS game engine [jecs-core](https://github.com/simone-caccialanza/jecs-core)
 
 ## Platforms
