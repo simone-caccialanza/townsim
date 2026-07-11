@@ -1,6 +1,6 @@
 package org.townsimulator;
 
-import jecs.core.ArchetypeManager;
+import jecs.core.World;
 import org.annotationlib.annotations.PostInit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,8 +8,8 @@ import org.townsimulator.components.Position;
 import org.townsimulator.components.SpriteASCII;
 
 import static java.lang.System.nanoTime;
-import static jecs.core.utils.GlobalConstants.MAP_LENGTH;
-import static jecs.core.utils.GlobalConstants.MAP_WIDTH;
+import static org.townsimulator.utils.Constants.MAP_LENGTH;
+import static org.townsimulator.utils.Constants.MAP_WIDTH;
 import static org.townsimulator.utils.Constants.PROFILE_FILE_LOGGER;
 
 public class GlobalGrid {
@@ -47,17 +47,19 @@ public class GlobalGrid {
 
     @PostInit
     public void bindSprites() {
+        bindSprites(TownSimWorld.get());
+    }
+
+    public void bindSprites(World world) {
         profiler.info("");
-        var all = ArchetypeManager.allArchetypesWithType(Position.Component.class, SpriteASCII.Component.class);
-        all.forEach(archetype -> {
-            var positionComponents = archetype.getComponentsOfType(Position.Component.class);
-            var spriteComponents = archetype.getComponentsOfType(SpriteASCII.Component.class);
-            for (int i = 0; i < positionComponents.size(); i++) {
-                var pos = positionComponents.get(i);
-                var sprite = spriteComponents.get(i);
-                grid[((int) pos.yPos * MAP_WIDTH + (int) pos.xPos)].spriteCharacter = sprite.spriteCharacter;
+        for (int entityId : world.query(Position.Component.class, SpriteASCII.Component.class)) {
+            var pos = world.getComponent(entityId, Position.Component.class);
+            var sprite = world.getComponent(entityId, SpriteASCII.Component.class);
+            if (pos == null || sprite == null) {
+                continue;
             }
-        });
+            grid[((int) pos.yPos * MAP_WIDTH + (int) pos.xPos)].spriteCharacter = sprite.spriteCharacter;
+        }
     }
 
     public boolean isBlocked(int x, int y) {

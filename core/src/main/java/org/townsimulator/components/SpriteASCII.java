@@ -5,7 +5,6 @@ import jecs.core.annotation.JecsComponent;
 import org.annotationlib.annotations.LogField;
 import org.townsimulator.GlobalGrid;
 
-import static org.townsimulator.utils.Constants.SPRITE_ASCII_COMPONENT_TABLE_INDEX;
 
 
 public final class SpriteASCII {
@@ -32,21 +31,6 @@ public final class SpriteASCII {
         @Override
         protected void reset() {
             this.spriteCharacter = ' ';
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public Component castToChild(ComponentBase componentBase) {
-            return (Component) componentBase;
-        }
-
-        public static int tableIndex() {
-            return SPRITE_ASCII_COMPONENT_TABLE_INDEX;
-        }
-
-        @Override
-        public int compareTo(ComponentBase o) {
-            return Component.class.getName().compareTo(o.castToChild(o).getClass().getName());
         }
     }
 }

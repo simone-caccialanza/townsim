@@ -4,7 +4,6 @@ import jecs.core.ComponentBase;
 import jecs.core.annotation.JecsComponent;
 import org.annotationlib.annotations.LogField;
 
-import static org.townsimulator.utils.Constants.HEALTH_COMPONENT_TABLE_INDEX;
 
 public final class Health {
 
@@ -31,21 +30,6 @@ public final class Health {
         @Override
         protected void reset() {
             this.currentHealth = this.maxHealth;
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public Component castToChild(ComponentBase componentBase) {
-            return (Component) componentBase;
-        }
-
-        public static int tableIndex() {
-            return HEALTH_COMPONENT_TABLE_INDEX;
-        }
-
-        @Override
-        public int compareTo(ComponentBase o) {
-            return Component.class.getName().compareTo(o.castToChild(o).getClass().getName());
         }
     }
 }

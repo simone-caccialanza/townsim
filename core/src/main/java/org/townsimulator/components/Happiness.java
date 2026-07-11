@@ -4,7 +4,6 @@ import jecs.core.ComponentBase;
 import jecs.core.annotation.JecsComponent;
 import org.annotationlib.annotations.LogField;
 
-import static org.townsimulator.utils.Constants.HAPPINESS_COMPONENT_TABLE_INDEX;
 
 public final class Happiness {
 
@@ -40,21 +39,6 @@ public final class Happiness {
         @Override
         protected void reset() {
             happiness = UPPER_BOUND / 2;
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public Component castToChild(ComponentBase componentBase) {
-            return (Component) componentBase;
-        }
-
-        public static int tableIndex() {
-            return HAPPINESS_COMPONENT_TABLE_INDEX;
-        }
-
-        @Override
-        public int compareTo(ComponentBase o) {
-            return Component.class.getName().compareTo(o.castToChild(o).getClass().getName());
         }
     }
 }

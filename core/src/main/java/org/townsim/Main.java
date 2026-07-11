@@ -12,8 +12,8 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.utils.ScreenUtils;
-import jecs.core.EntityManager;
 import org.townsimulator.GlobalGrid;
+import org.townsimulator.TownSimWorld;
 import org.townsimulator.components.*;
 import org.townsimulator.components.manager.SpriteManager;
 import org.townsimulator.game.loader.TSGameLoader;
@@ -32,7 +32,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
     private float lastDragX, lastDragY;
     private boolean isDragging = false;
-    private int dragButton = -1; // track which button was pressed
+    private int dragButton = -1;
 
     private Texture playerTexture;
     private Sprite playerSprite;
@@ -44,7 +44,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     @Override
     public void create() {
         map = new TmxMapLoader().load("C:\\Users\\simon\\IdeaProjects\\townsim\\assets\\maps\\map1.tmx");
-        mapRenderer = new OrthogonalTiledMapRenderer(map, 2f); // upscale tiles
+        mapRenderer = new OrthogonalTiledMapRenderer(map, 2f);
 
         playerTexture = new Texture("black-circle.png");
         playerSprite = new Sprite(playerTexture);
@@ -54,11 +54,10 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
         createCollisionGame();
 
-
         camera = new OrthographicCamera();
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        Gdx.input.setInputProcessor(this); // Activate input handling
+        Gdx.input.setInputProcessor(this);
     }
 
     @Override
@@ -66,10 +65,15 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
 
         gLoop.step();
-        // Il MovementSystem deve aggiornare il component Sprite
 
-        playerSprite.setPosition(EntityManager.getComponent(0, Position.Component.class).xPos, EntityManager.getComponent(0, Position.Component.class).yPos);
-//        playerSprite.setPosition(960*6/30, 640*11/20);
+        var world = TownSimWorld.get();
+        int playerEntityId = TownSimWorld.playerEntityId();
+        if (playerEntityId >= 0) {
+            var position = world.getComponent(playerEntityId, Position.Component.class);
+            if (position != null) {
+                playerSprite.setPosition(position.xPos, position.yPos);
+            }
+        }
 
         camera.update();
         mapRenderer.setView(camera);
@@ -77,9 +81,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        // Bisogna implementare una logica che vada diretta sui soli sprite da disegnare
-        SpriteManager.getActiveSprites().forEach(sprite -> sprite.draw(batch));
-//        playerSprite.draw(batch);
+        SpriteManager.getActiveSprites(world).forEach(sprite -> sprite.draw(batch));
         batch.end();
     }
 
@@ -91,16 +93,11 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         batch.dispose();
     }
 
-    // --- InputProcessor methods ---
-
     @Override
     public boolean scrolled(float amountX, float amountY) {
         float zoomSpeed = 0.1f;
         camera.zoom += amountY * zoomSpeed;
-
-        // Clamp zoom to reasonable range
         camera.zoom = Math.max(0.5f, Math.min(camera.zoom, 3f));
-
         return true;
     }
 
@@ -139,36 +136,18 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         return true;
     }
 
-    // Unused methods (you can return false or ignore them)
     public boolean keyDown(int keycode) {
         float Xstep = 960 / 30;
         float Ystep = 640 / 20;
 
         switch (keycode) {
-            case Input.Keys.W:
-                playerSprite.translateY(Ystep);
-                break;
-            case Input.Keys.S:
-                playerSprite.translateY(-Ystep);
-                break;
-            case Input.Keys.A:
-                playerSprite.translateX(-Xstep);
-                break;
-            case Input.Keys.D:
-                playerSprite.translateX(Xstep);
-                break;
-            case Input.Keys.UP:
-                playerSprite.translateY(Ystep);
-                break;
-            case Input.Keys.DOWN:
-                playerSprite.translateY(-Ystep);
-                break;
-            case Input.Keys.LEFT:
-                playerSprite.translateX(-Xstep);
-                break;
-            case Input.Keys.RIGHT:
-                playerSprite.translateX(Xstep);
-                break;
+            case Input.Keys.W, Input.Keys.UP -> playerSprite.translateY(Ystep);
+            case Input.Keys.S, Input.Keys.DOWN -> playerSprite.translateY(-Ystep);
+            case Input.Keys.A, Input.Keys.LEFT -> playerSprite.translateX(-Xstep);
+            case Input.Keys.D, Input.Keys.RIGHT -> playerSprite.translateX(Xstep);
+            default -> {
+                return false;
+            }
         }
         return true;
     }
@@ -190,16 +169,17 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     }
 
     void createCollisionGame() {
+        var world = TownSimWorld.create();
+
         var sprites = SpriteManager.createSprite(
             List.of("blue_man_walking_left.png",
                 "blue_man_walking_right.png",
                 "blue_man_walking_vertical.png")
         );
         var tsSpriteComponent = new TSSprite.Component(12);
-        tsSpriteComponent.sprites = sprites;
-        tsSpriteComponent.activeSprite = tsSpriteComponent.sprites[0];
+        tsSpriteComponent.setSprites(sprites);
 
-        EntityManager.createEntity(
+        var player = world.createEntity(
             new Movement.Component(32, 32, 960 * 6 / 30, 640 * 11 / 20),
             new Position.Component(960 * 6 / 30, 640 * 11 / 20, true),
             new SpriteASCII.Component('A'),
@@ -207,22 +187,17 @@ public class Main extends ApplicationAdapter implements InputProcessor {
             new Hunger.Component(100.0f),
             new Task.Component()
         );
-        EntityManager.createEntity(
+        TownSimWorld.setPlayerEntityId(player.id());
+
+        world.createEntity(
             new Position.Component(960 * 16 / 30, 640 * 5 / 20, true),
             new FoodProvider.Component(1)
         );
 
-
         var gLogic = new CollisionsGame.CollisionGameLogic(BASE_LOGIC_MOVEMENT_HUNGER_FOODSUPPLY);
-
         gLoop = new CollisionsGame.CollisionGameLoop(CollisionsGame.BASE_LOOP_STEP, gLogic);
 
-        GlobalGrid.getInstance().bindSprites();
-//        GlobalGrid.getInstance().cellAt(2, 2).movementWeight = 1;
-//        GlobalGrid.getInstance().cellAt(2, 3).movementWeight = 1;
-//        GlobalGrid.getInstance().cellAt(3, 3).movementWeight = 1;
-//        GlobalGrid.getInstance().cellAt(4, 3).movementWeight = 1;
-//        GlobalGrid.getInstance().cellAt(5, 3).movementWeight = 1;
+        GlobalGrid.getInstance().bindSprites(world);
 
         gLoader = new TSGameLoader();
         gLoader.run();

@@ -1,61 +1,44 @@
 package org.townsimulator.systems;
 
-import jecs.core.Archetype;
-import jecs.core.ArchetypeManager;
+import jecs.core.World;
 import jecs.core.system.ECSSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.townsimulator.GlobalGrid;
 import org.townsimulator.components.Movement;
 import org.townsimulator.components.Position;
-import org.townsimulator.components.TSSprite;
 import org.townsimulator.components.SpriteASCII;
+import org.townsimulator.components.TSSprite;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-import static jecs.core.utils.GlobalConstants.MAP_LENGTH;
-import static jecs.core.utils.GlobalConstants.MAP_WIDTH;
+import static org.townsimulator.utils.Constants.MAP_LENGTH;
+import static org.townsimulator.utils.Constants.MAP_WIDTH;
 
-public class MovementSystem extends ECSSystem<MovementSystem> {
+public class MovementSystem extends ECSSystem {
     private static final Logger log = LoggerFactory.getLogger(MovementSystem.class);
 
-    private MovementSystem() {
-        super(MovementSystem.class);
-    }
-
-    public static MovementSystem getInstance() {
-        return getInstanceOf(MovementSystem.class);
-    }
-
     @Override
-    public void run() {
-        Set<Archetype> archetypes = ArchetypeManager.allArchetypesWithType(
-                Position.Component.class, Movement.Component.class, SpriteASCII.Component.class, TSSprite.Component.class).stream()
-            .filter(a -> !a.isEmpty()).collect(Collectors.toSet());
-
+    public void run(World world, double deltaSeconds) {
         Map<String, Position.Component> positionMap = new HashMap<>();
         Map<Position.Component, Movement.Component> movementMap = new HashMap<>();
         Map<Position.Component, SpriteASCII.Component> asciiSpriteMap = new HashMap<>();
         Map<Position.Component, TSSprite.Component> spriteMap = new HashMap<>();
 
-        for (Archetype archetype : archetypes) {
-            var positions = archetype.getComponentsOfType(Position.Component.class);
-            var movements = archetype.getComponentsOfType(Movement.Component.class);
-            var asciiSprites = archetype.getComponentsOfType(SpriteASCII.Component.class);
-            var sprites = archetype.getComponentsOfType(TSSprite.Component.class);
-
-            for (int i = 0; i < positions.size(); i++) {
-                Position.Component pos = positions.get(i);
-                Movement.Component mov = movements.get(i);
-                SpriteASCII.Component asciiSpr = asciiSprites.get(i);
-                TSSprite.Component spr = sprites.get(i);
-                String key = (int) pos.xPos + "," + (int) pos.yPos;
-                positionMap.put(key, pos);
-                movementMap.put(pos, mov);
-                asciiSpriteMap.put(pos, asciiSpr);
-                spriteMap.put(pos, spr);
+        for (int entityId : world.query(
+                Position.Component.class, Movement.Component.class, SpriteASCII.Component.class, TSSprite.Component.class)) {
+            Position.Component pos = world.getComponent(entityId, Position.Component.class);
+            Movement.Component mov = world.getComponent(entityId, Movement.Component.class);
+            SpriteASCII.Component asciiSpr = world.getComponent(entityId, SpriteASCII.Component.class);
+            TSSprite.Component spr = world.getComponent(entityId, TSSprite.Component.class);
+            if (pos == null || mov == null || asciiSpr == null || spr == null) {
+                continue;
             }
+            String key = (int) pos.xPos + "," + (int) pos.yPos;
+            positionMap.put(key, pos);
+            movementMap.put(pos, mov);
+            asciiSpriteMap.put(pos, asciiSpr);
+            spriteMap.put(pos, spr);
         }
 
         List<Runnable> actions = new ArrayList<>();
@@ -63,159 +46,157 @@ public class MovementSystem extends ECSSystem<MovementSystem> {
         Set<String> reserved = new HashSet<>();
         Set<Set<Position.Component>> swapsPerformed = new HashSet<>();
 
-        for (Archetype archetype : archetypes) {
-            var positions = archetype.getComponentsOfType(Position.Component.class);
-            var movements = archetype.getComponentsOfType(Movement.Component.class);
-            var asciiSprites = archetype.getComponentsOfType(SpriteASCII.Component.class);
-            var sprites = archetype.getComponentsOfType(TSSprite.Component.class);
+        for (int entityId : world.query(
+                Position.Component.class, Movement.Component.class, SpriteASCII.Component.class, TSSprite.Component.class)) {
+            Position.Component pos = world.getComponent(entityId, Position.Component.class);
+            Movement.Component mov = world.getComponent(entityId, Movement.Component.class);
+            SpriteASCII.Component asciiSprite = world.getComponent(entityId, SpriteASCII.Component.class);
+            TSSprite.Component sprite = world.getComponent(entityId, TSSprite.Component.class);
+            if (pos == null || mov == null || asciiSprite == null || sprite == null) {
+                continue;
+            }
 
-            for (int i = 0; i < positions.size(); i++) {
-                Position.Component pos = positions.get(i);
-                Movement.Component mov = movements.get(i);
-                SpriteASCII.Component asciiSprite = asciiSprites.get(i);
-                TSSprite.Component sprite = sprites.get(i);
+            if (!mov.wantsToMove || movedThisFrame.contains(pos)) continue;
 
-                if (!mov.wantsToMove || movedThisFrame.contains(pos)) continue;
+            if ((int) pos.xPos == (int) mov.xDst && (int) pos.yPos == (int) mov.yDst) {
+                mov.wantsToMove = false;
+                mov.path = null;
+                mov.pathIndex = 0;
+                continue;
+            }
+
+            if (mov.path == null || mov.pathIndex >= mov.path.size()) {
+                mov.path = AStar.findPath((int) pos.xPos, (int) pos.yPos, (int) mov.xDst, (int) mov.yDst);
+                mov.pathIndex = 0;
+                if (mov.path.isEmpty()) {
+                    mov.wantsToMove = false;
+                    continue;
+                }
+            }
+
+            int maxAdvance = (int) Math.max(Math.abs(mov.xVel), Math.abs(mov.yVel));
+            if (maxAdvance == 0) maxAdvance = 1;
+            maxAdvance = Math.min(maxAdvance, mov.path.size() - mov.pathIndex);
+
+            int[] nextStep = null;
+            int stepsTaken = 0;
+
+            for (int s = 1; s <= maxAdvance; s++) {
+                int[] step = mov.path.get(mov.pathIndex + s - 1);
+                if (GlobalGrid.getInstance().isBlocked(step[0], step[1])) {
+                    break;
+                }
+                nextStep = step;
+                stepsTaken = s;
+            }
+
+            if (nextStep == null) {
+                mov.path = AStar.findPath((int) pos.xPos, (int) pos.yPos, (int) mov.xDst, (int) mov.yDst);
+                mov.pathIndex = 0;
+                continue;
+            }
+
+            String nextKey = nextStep[0] + "," + nextStep[1];
+            String currentKey = (int) pos.xPos + "," + (int) pos.yPos;
+
+            Position.Component occupying = positionMap.get(nextKey);
+            if (occupying != null && occupying != pos && occupying.blocksTile) {
+                Movement.Component theirMov = movementMap.get(occupying);
+
+                if (theirMov != null) {
+                    if (theirMov.path == null || theirMov.pathIndex >= theirMov.path.size()) {
+                        theirMov.path = AStar.findPath((int) occupying.xPos, (int) occupying.yPos,
+                            (int) theirMov.xDst, (int) theirMov.yDst);
+                        theirMov.pathIndex = 0;
+                    }
+
+                    if (!theirMov.path.isEmpty()) {
+                        int[] theirNextStep = theirMov.path.get(theirMov.pathIndex);
+                        if (theirNextStep[0] == (int) pos.xPos && theirNextStep[1] == (int) pos.yPos) {
+                            Set<Position.Component> swapPair = new HashSet<>(Set.of(pos, occupying));
+                            if (!swapsPerformed.contains(swapPair) && !reserved.contains(nextKey) && !reserved.contains(currentKey)) {
+                                reserved.add(nextKey);
+                                reserved.add(currentKey);
+                                swapsPerformed.add(swapPair);
+
+                                int finalStepsTaken = stepsTaken;
+                                actions.add(() -> {
+                                    GlobalGrid grid = GlobalGrid.getInstance();
+
+                                    grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = ' ';
+                                    grid.setBlocked((int) pos.xPos, (int) pos.yPos, false);
+                                    grid.cellAt((int) occupying.xPos, (int) occupying.yPos).spriteCharacter = ' ';
+                                    grid.setBlocked((int) occupying.xPos, (int) occupying.yPos, false);
+
+                                    int tmpX = (int) pos.xPos, tmpY = (int) pos.yPos;
+                                    pos.xPos = occupying.xPos;
+                                    pos.yPos = occupying.yPos;
+                                    occupying.xPos = tmpX;
+                                    occupying.yPos = tmpY;
+
+                                    mov.pathIndex += finalStepsTaken;
+                                    theirMov.pathIndex += 1;
+                                    movedThisFrame.add(pos);
+                                    movedThisFrame.add(occupying);
+
+                                    SpriteASCII.Component theirAsciiSprite = asciiSpriteMap.get(occupying);
+
+                                    grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = asciiSprite.spriteCharacter;
+                                    grid.setBlocked((int) pos.xPos, (int) pos.yPos, pos.blocksTile);
+                                    if (sprite.activeSprite != null) {
+                                        sprite.activeSprite.setPosition(pos.xPos, pos.yPos);
+                                    }
+
+                                    grid.cellAt((int) occupying.xPos, (int) occupying.yPos).spriteCharacter = theirAsciiSprite.spriteCharacter;
+                                    grid.setBlocked((int) occupying.xPos, (int) occupying.yPos, occupying.blocksTile);
+
+                                    TSSprite.Component theirSprite = spriteMap.get(occupying);
+                                    if (theirSprite.activeSprite != null) {
+                                        theirSprite.activeSprite.setPosition(occupying.xPos, occupying.yPos);
+                                    }
+
+                                    log.debug("Swapped {} with {}", pos, occupying);
+                                });
+                            }
+                        }
+                    }
+                }
+                continue;
+            } else if (reserved.contains(nextKey)) {
+                mov.path = AStar.findPath((int) pos.xPos, (int) pos.yPos, (int) mov.xDst, (int) mov.yDst);
+                mov.pathIndex = 0;
+                continue;
+            }
+
+            reserved.add(nextKey);
+            int finalStepsTaken = stepsTaken;
+            int[] finalNextStep = nextStep;
+            actions.add(() -> {
+                GlobalGrid grid = GlobalGrid.getInstance();
+
+                grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = ' ';
+                grid.setBlocked((int) pos.xPos, (int) pos.yPos, false);
+
+                pos.xPos = finalNextStep[0];
+                pos.yPos = finalNextStep[1];
+                mov.pathIndex += finalStepsTaken;
+                movedThisFrame.add(pos);
+
+                grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = asciiSprite.spriteCharacter;
+                if (sprite.activeSprite != null) {
+                    sprite.activeSprite.setPosition(pos.xPos, pos.yPos);
+                }
+                grid.setBlocked((int) pos.xPos, (int) pos.yPos, pos.blocksTile);
 
                 if ((int) pos.xPos == (int) mov.xDst && (int) pos.yPos == (int) mov.yDst) {
                     mov.wantsToMove = false;
                     mov.path = null;
                     mov.pathIndex = 0;
-                    continue;
                 }
-
-                if (mov.path == null || mov.pathIndex >= mov.path.size()) {
-                    mov.path = AStar.findPath((int) pos.xPos, (int) pos.yPos, (int) mov.xDst, (int) mov.yDst);
-                    mov.pathIndex = 0;
-                    if (mov.path.isEmpty()) {
-                        mov.wantsToMove = false;
-                        continue;
-                    }
-                }
-
-                int maxAdvance = (int) Math.max(Math.abs(mov.xVel), Math.abs(mov.yVel));
-                if (maxAdvance == 0) maxAdvance = 1;
-                maxAdvance = Math.min(maxAdvance, mov.path.size() - mov.pathIndex);
-
-                int[] nextStep = null;
-                int stepsTaken = 0;
-
-                for (int s = 1; s <= maxAdvance; s++) {
-                    int[] step = mov.path.get(mov.pathIndex + s - 1);
-                    if (GlobalGrid.getInstance().isBlocked(step[0], step[1])) {
-                        break;
-                    }
-                    nextStep = step;
-                    stepsTaken = s;
-                }
-
-                if (nextStep == null) {
-                    mov.path = AStar.findPath((int) pos.xPos, (int) pos.yPos, (int) mov.xDst, (int) mov.yDst);
-                    mov.pathIndex = 0;
-                    continue;
-                }
-
-                String nextKey = nextStep[0] + "," + nextStep[1];
-                String currentKey = (int) pos.xPos + "," + (int) pos.yPos;
-
-                Position.Component occupying = positionMap.get(nextKey);
-                if (occupying != null && occupying != pos && occupying.blocksTile) {
-                    Movement.Component theirMov = movementMap.get(occupying);
-
-                    if (theirMov != null) {
-                        if (theirMov.path == null || theirMov.pathIndex >= theirMov.path.size()) {
-                            theirMov.path = AStar.findPath((int) occupying.xPos, (int) occupying.yPos,
-                                (int) theirMov.xDst, (int) theirMov.yDst);
-                            theirMov.pathIndex = 0;
-                        }
-
-                        if (!theirMov.path.isEmpty()) {
-                            int[] theirNextStep = theirMov.path.get(theirMov.pathIndex);
-                            if (theirNextStep[0] == (int) pos.xPos && theirNextStep[1] == (int) pos.yPos) {
-                                Set<Position.Component> swapPair = new HashSet<>(Set.of(pos, occupying));
-                                if (!swapsPerformed.contains(swapPair) && !reserved.contains(nextKey) && !reserved.contains(currentKey)) {
-                                    reserved.add(nextKey);
-                                    reserved.add(currentKey);
-                                    swapsPerformed.add(swapPair);
-
-                                    int finalStepsTaken = stepsTaken;
-                                    actions.add(() -> {
-                                        GlobalGrid grid = GlobalGrid.getInstance();
-
-                                        grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = ' ';
-                                        grid.setBlocked((int) pos.xPos, (int) pos.yPos, false);
-                                        grid.cellAt((int) occupying.xPos, (int) occupying.yPos).spriteCharacter = ' ';
-                                        grid.setBlocked((int) occupying.xPos, (int) occupying.yPos, false);
-
-                                        int tmpX = (int) pos.xPos, tmpY = (int) pos.yPos;
-                                        pos.xPos = occupying.xPos;
-                                        pos.yPos = occupying.yPos;
-                                        occupying.xPos = tmpX;
-                                        occupying.yPos = tmpY;
-
-                                        mov.pathIndex += finalStepsTaken;
-                                        theirMov.pathIndex += 1;
-                                        movedThisFrame.add(pos);
-                                        movedThisFrame.add(occupying);
-
-                                        SpriteASCII.Component theirAsciiSprite = asciiSpriteMap.get(occupying);
-
-                                        grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = asciiSprite.spriteCharacter;
-                                        grid.setBlocked((int) pos.xPos, (int) pos.yPos, pos.blocksTile);
-                                        sprite.activeSprite.setPosition(pos.xPos, pos.yPos);
-
-                                        grid.cellAt((int) occupying.xPos, (int) occupying.yPos).spriteCharacter = theirAsciiSprite.spriteCharacter;
-                                        grid.setBlocked((int) occupying.xPos, (int) occupying.yPos, occupying.blocksTile);
-
-                                        TSSprite.Component theirSprite = spriteMap.get(occupying);
-                                        theirSprite.activeSprite.setPosition(occupying.xPos, occupying.yPos);
-
-
-                                        log.debug("Swapped {} with {}", pos, occupying);
-                                    });
-                                }
-                            }
-                        }
-                    }
-                    continue;
-                } else if (reserved.contains(nextKey)) {
-                    mov.path = AStar.findPath((int) pos.xPos, (int) pos.yPos, (int) mov.xDst, (int) mov.yDst);
-                    mov.pathIndex = 0;
-                    continue;
-                }
-
-                reserved.add(nextKey);
-                int finalStepsTaken = stepsTaken;
-                int[] finalNextStep = nextStep;
-                actions.add(() -> {
-                    GlobalGrid grid = GlobalGrid.getInstance();
-
-                    grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = ' ';
-                    grid.setBlocked((int) pos.xPos, (int) pos.yPos, false);
-
-                    pos.xPos = finalNextStep[0];
-                    pos.yPos = finalNextStep[1];
-                    mov.pathIndex += finalStepsTaken;
-                    movedThisFrame.add(pos);
-
-                    grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = asciiSprite.spriteCharacter;
-                    sprite.activeSprite.setPosition(pos.xPos, pos.yPos);
-                    grid.setBlocked((int) pos.xPos, (int) pos.yPos, pos.blocksTile);
-
-                    if ((int) pos.xPos == (int) mov.xDst && (int) pos.yPos == (int) mov.yDst) {
-                        mov.wantsToMove = false;
-                        mov.path = null;
-                        mov.pathIndex = 0;
-                    }
-                });
-            }
+            });
         }
 
         actions.forEach(Runnable::run);
-
-        positionMap.clear();
-        movementMap.clear();
-        asciiSpriteMap.clear();
     }
 
     static class AStar {

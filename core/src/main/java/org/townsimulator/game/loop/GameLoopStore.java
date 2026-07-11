@@ -1,33 +1,34 @@
 package org.townsimulator.game.loop;
 
 import jecs.core.GameLogic;
-import jecs.core.clocks.GameClock;
+import org.townsimulator.TownSimWorld;
 
 import java.util.function.Consumer;
-
-import static jecs.core.utils.GlobalConstants.TICK_PER_SECOND;
-import static jecs.core.utils.GlobalMutable.running;
 
 public class GameLoopStore {
 
     public static final Consumer<GameLogic> BASE_LOOP = (gl) -> {
-        while (running) {
-            if (GameClock.ticks > 1000) break;
-
-            GameClock.update();
-            long startLoopTime = System.nanoTime();
-            while (GameClock.shouldTick()) {
-                gl.update();
-                GameClock.tick();
+        var clock = TownSimWorld.clock();
+        while (TownSimWorld.isRunning()) {
+            if (clock.simulationTicks() > TownSimWorld.maxSimulationTicks()) {
+                break;
             }
 
-            long elapsedTime = System.nanoTime() - startLoopTime; // Time taken by the loop
-            long sleepTime = 1_000_000_000 / TICK_PER_SECOND - elapsedTime; // Nanosecond per frame time
+            clock.advanceFrame();
+            long startLoopTime = System.nanoTime();
+            while (clock.hasPendingTick()) {
+                gl.update();
+                clock.consumeTick();
+            }
+
+            long elapsedTime = System.nanoTime() - startLoopTime;
+            long sleepTime = TownSimWorld.get().config().targetFrameNanos() - elapsedTime;
 
             if (sleepTime > 0) {
                 try {
-                    Thread.sleep(sleepTime / 1_000_000); // Sleep if there's still time left in the frame
-                } catch (InterruptedException e) {
+                    Thread.sleep(sleepTime / 1_000_000L);
+                } catch (InterruptedException ignored) {
+                    Thread.currentThread().interrupt();
                 }
             }
         }

@@ -6,7 +6,6 @@ import org.annotationlib.annotations.LogField;
 
 import java.util.List;
 
-import static org.townsimulator.utils.Constants.NAME_COMPONENT_TABLE_INDEX;
 
 public final class Name {
 
@@ -34,21 +33,6 @@ public final class Name {
             name = "";
             middleNames.clear();
             lastName = "";
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public Component castToChild(ComponentBase componentBase) {
-            return (Component) componentBase;
-        }
-
-        public static int tableIndex() {
-            return NAME_COMPONENT_TABLE_INDEX;
-        }
-
-        @Override
-        public int compareTo(ComponentBase o) {
-            return Component.class.getName().compareTo(o.castToChild(o).getClass().getName());
         }
     }
 }

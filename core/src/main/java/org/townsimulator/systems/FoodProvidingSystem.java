@@ -1,67 +1,49 @@
 package org.townsimulator.systems;
 
-import jecs.core.ArchetypeManager;
-import jecs.core.EntityManager;
+import jecs.core.World;
 import jecs.core.system.ECSSystem;
 import org.townsimulator.components.FoodProvider;
 import org.townsimulator.components.Hunger;
 import org.townsimulator.components.Position;
 import org.townsimulator.components.SeekingFood;
 
-import java.util.List;
+public class FoodProvidingSystem extends ECSSystem {
 
-public class FoodProvidingSystem extends ECSSystem<FoodProvidingSystem> {
+    @Override
+    public void run(World world, double deltaSeconds) {
+        for (int providerEntityId : world.query(FoodProvider.Component.class, Position.Component.class)) {
+            var foodProvider = world.getComponent(providerEntityId, FoodProvider.Component.class);
+            var foodProviderPosition = world.getComponent(providerEntityId, Position.Component.class);
+            if (foodProvider == null || foodProviderPosition == null) {
+                continue;
+            }
 
-    private FoodProvidingSystem() {
-        super(FoodProvidingSystem.class);
-    }
-
-    public static FoodProvidingSystem getInstance() {
-        return getInstanceOf(FoodProvidingSystem.class);
-    }
-
-    private static void decreaseHunger(Integer entityId, Hunger.Component hungerComponent, List<FoodProvider.Component> foodProvider, int i) {
-        if (hungerComponent.hunger < foodProvider.get(i).foodSupply) {
-            hungerComponent.hunger = 0;
-            hungerComponent.isHungry = false;
-            EntityManager.removeComponent(entityId, SeekingFood.Component.class);
-        } else {
-            hungerComponent.hunger -= foodProvider.get(i).foodSupply;
-            if (hungerComponent.hunger <= 1) {
-                hungerComponent.isHungry = false;
-                EntityManager.removeComponent(entityId, SeekingFood.Component.class);
+            for (int entityId : world.getEntitiesWith(Hunger.Component.class, Position.Component.class)) {
+                var hungerComponent = world.getComponent(entityId, Hunger.Component.class);
+                var positionComponent = world.getComponent(entityId, Position.Component.class);
+                if (hungerComponent == null || positionComponent == null) {
+                    continue;
+                }
+                if (hungerComponent.isHungry
+                        && foodProviderPosition.xPos == positionComponent.xPos
+                        && foodProviderPosition.yPos == positionComponent.yPos) {
+                    decreaseHunger(world, entityId, hungerComponent, foodProvider);
+                }
             }
         }
     }
 
-    @Override
-    public void run() {
-        var archetypesWithFoodProvider = ArchetypeManager.allArchetypesWithType(FoodProvider.Component.class, Position.Component.class);
-        archetypesWithFoodProvider.forEach(archetype -> {
-            var foodProvider = archetype.getComponentsOfType(FoodProvider.Component.class);
-            if (foodProvider.isEmpty()) return;
-            var foodProviderPosition = archetype.getComponentsOfType(Position.Component.class);
-            if (foodProvider.isEmpty() || foodProviderPosition.isEmpty()) {
-                return;
+    private static void decreaseHunger(World world, int entityId, Hunger.Component hungerComponent, FoodProvider.Component foodProvider) {
+        if (hungerComponent.hunger < foodProvider.foodSupply) {
+            hungerComponent.hunger = 0;
+            hungerComponent.isHungry = false;
+            world.removeComponent(entityId, SeekingFood.Component.class);
+        } else {
+            hungerComponent.hunger -= foodProvider.foodSupply;
+            if (hungerComponent.hunger <= 1) {
+                hungerComponent.isHungry = false;
+                world.removeComponent(entityId, SeekingFood.Component.class);
             }
-            var entities = EntityManager.getEntitiesWith(Hunger.Component.class, Position.Component.class);
-            if (foodProvider.isEmpty() || foodProviderPosition.isEmpty()) {
-                return;
-            }
-
-            for (int i = 0; i < foodProvider.size(); i++) {
-                for (Integer entityId : entities) {
-                    var hungerComponent = EntityManager.getComponent(entityId, Hunger.Component.class);
-                    var positionComponent = EntityManager.getComponent(entityId, Position.Component.class);
-                    if (hungerComponent == null || positionComponent == null) continue;
-                    if (hungerComponent.isHungry && foodProviderPosition.get(i).xPos == positionComponent.xPos && foodProviderPosition.get(i).yPos == positionComponent.yPos) {
-                        decreaseHunger(entityId, hungerComponent, foodProvider, i);
-                    }
-                    if (!hungerComponent.isHungry) {
-
-                    }
-                }
-            }
-        });
+        }
     }
 }

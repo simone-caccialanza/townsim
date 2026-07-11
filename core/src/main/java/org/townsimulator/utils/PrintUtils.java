@@ -2,8 +2,8 @@ package org.townsimulator.utils;
 
 import org.townsimulator.GlobalGrid;
 
-import static jecs.core.utils.GlobalConstants.MAP_LENGTH;
-import static jecs.core.utils.GlobalConstants.MAP_WIDTH;
+import static org.townsimulator.utils.Constants.MAP_LENGTH;
+import static org.townsimulator.utils.Constants.MAP_WIDTH;
 
 public class PrintUtils {
 

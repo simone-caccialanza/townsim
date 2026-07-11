@@ -5,7 +5,6 @@ import jecs.core.ComponentBase;
 import jecs.core.annotation.JecsComponent;
 import org.annotationlib.annotations.LogField;
 
-import static org.townsimulator.utils.Constants.POSITION_COMPONENT_TABLE_INDEX;
 
 public final class Position {
 
@@ -40,21 +39,6 @@ public final class Position {
         public void reset() {
             xPos = 0;
             yPos = 0;
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public Component castToChild(ComponentBase componentBase) {
-            return (Component) componentBase;
-        }
-
-        public static int tableIndex() {
-            return POSITION_COMPONENT_TABLE_INDEX;
-        }
-
-        @Override
-        public int compareTo(ComponentBase o) {
-            return Component.class.getName().compareTo(o.castToChild(o).getClass().getName());
         }
     }
 }

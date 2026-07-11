@@ -1,7 +1,6 @@
 package org.townsimulator.task;
 
-import jecs.core.Archetype;
-import jecs.core.EntityManager;
+import jecs.core.World;
 import org.townsimulator.components.Movement;
 
 public final class GoTo extends TaskAction {
@@ -15,8 +14,11 @@ public final class GoTo extends TaskAction {
     }
 
     @Override
-    public void action(int entityId) {
-        var movementComponent = EntityManager.getComponent(entityId, Movement.Component.class);
+    public void action(World world, int entityId) {
+        var movementComponent = world.getComponent(entityId, Movement.Component.class);
+        if (movementComponent == null) {
+            return;
+        }
         if (movementComponent.xVel <= 0.0f) {
             movementComponent.xVel = 1.0f;
         }
@@ -27,11 +29,4 @@ public final class GoTo extends TaskAction {
         movementComponent.yDst = yDst;
         movementComponent.wantsToMove = true;
     }
-
-    public static class Properties {
-        Archetype archetype;
-        Integer xDst;
-        Integer yDst;
-    }
-
 }

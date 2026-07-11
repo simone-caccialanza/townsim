@@ -12,15 +12,13 @@ dependencies {
   if(enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
   }
-  implementation 'org.jecs:jecs-core:0.0.4-SNAPSHOT'
+  implementation 'org.jecs:jecs-core:0.1.0-SNAPSHOT'
   implementation 'org.projectlombok:lombok:1.18.26'
   implementation 'org.yaml:snakeyaml:2.0'
   implementation 'org.reflections:reflections:0.10.2'
-  implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
-  implementation 'org.apache.logging.log4j:log4j-api:2.20.0'
-  implementation 'org.openjdk.jmh:jmh-core:1.37'
   implementation 'org.apache.logging.log4j:log4j-core:2.24.3'
   implementation 'org.apache.logging.log4j:log4j-api:2.24.3'
+  implementation 'org.openjdk.jmh:jmh-core:1.37'
 
   annotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.37'
 

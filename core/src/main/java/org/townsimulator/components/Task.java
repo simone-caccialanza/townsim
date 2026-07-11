@@ -9,7 +9,6 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 
 import static org.townsimulator.components.Task.Status.WAITING;
-import static org.townsimulator.utils.Constants.TASK_COMPONENT_TABLE_INDEX;
 
 public final class Task {
 
@@ -41,26 +40,11 @@ public final class Task {
             this.actionQueue.clear();
         }
 
-        @SuppressWarnings("unchecked")
-        @Override
-        public Component castToChild(ComponentBase componentBase) {
-            return (Component) componentBase;
-        }
-
         public boolean addAction(TaskAction action) {
             if (actionQueue.parallelStream().filter(a -> a.getPriority().equals(action.getPriority())).toList().isEmpty()) {
                 return false;
             }
             return actionQueue.add(action);
-        }
-
-        public static int tableIndex() {
-            return TASK_COMPONENT_TABLE_INDEX;
-        }
-
-        @Override
-        public int compareTo(ComponentBase o) {
-            return Component.class.getName().compareTo(o.castToChild(o).getClass().getName());
         }
     }
 }

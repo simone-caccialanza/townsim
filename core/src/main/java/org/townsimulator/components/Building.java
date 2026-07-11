@@ -4,7 +4,6 @@ import jecs.core.ComponentBase;
 import jecs.core.annotation.JecsComponent;
 import org.annotationlib.annotations.LogField;
 
-import static org.townsimulator.utils.Constants.BUILDING_COMPONENT_TABLE_INDEX;
 
 public final class Building {
 
@@ -28,21 +27,6 @@ public final class Building {
         @Override
         protected void reset() {
             this.name = "";
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public Component castToChild(ComponentBase componentBase) {
-            return (Component) componentBase;
-        }
-
-        public static int tableIndex() {
-            return BUILDING_COMPONENT_TABLE_INDEX;
-        }
-
-        @Override
-        public int compareTo(ComponentBase o) {
-            return Component.class.getName().compareTo(o.castToChild(o).getClass().getName());
         }
     }
 }

@@ -7,7 +7,6 @@ import org.annotationlib.annotations.LogField;
 
 import java.util.List;
 
-import static org.townsimulator.utils.Constants.MOVEMENT_COMPONENT_TABLE_INDEX;
 
 public final class Movement {
 
@@ -53,21 +52,6 @@ public final class Movement {
             yVel = 0;
             xDst = 0;
             yDst = 0;
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public Component castToChild(ComponentBase componentBase) {
-            return (Component) componentBase;
-        }
-
-        public static int tableIndex() {
-            return MOVEMENT_COMPONENT_TABLE_INDEX;
-        }
-
-        @Override
-        public int compareTo(ComponentBase o) {
-            return Component.class.getName().compareTo(o.castToChild(o).getClass().getName());
         }
     }
 }
