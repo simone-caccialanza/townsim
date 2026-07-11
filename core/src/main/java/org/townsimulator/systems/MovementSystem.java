@@ -30,19 +30,18 @@ public class MovementSystem extends ECSSystem {
         Map<Position.Component, TSSprite.Component> spriteMap = new HashMap<>();
 
         for (int entityId : world.query(
-                Position.Component.class, Movement.Component.class, SpriteASCII.Component.class, TSSprite.Component.class)) {
+                Position.Component.class, Movement.Component.class, SpriteASCII.Component.class)) {
             Position.Component pos = world.getComponent(entityId, Position.Component.class);
             Movement.Component mov = world.getComponent(entityId, Movement.Component.class);
             SpriteASCII.Component asciiSpr = world.getComponent(entityId, SpriteASCII.Component.class);
-            TSSprite.Component spr = world.getComponent(entityId, TSSprite.Component.class);
-            if (pos == null || mov == null || asciiSpr == null || spr == null) {
+            if (pos == null || mov == null || asciiSpr == null) {
                 continue;
             }
             String key = (int) pos.xPos + "," + (int) pos.yPos;
             positionMap.put(key, pos);
             movementMap.put(pos, mov);
             asciiSpriteMap.put(pos, asciiSpr);
-            spriteMap.put(pos, spr);
+            spriteMap.put(pos, world.getComponent(entityId, TSSprite.Component.class));
         }
 
         List<Runnable> actions = new ArrayList<>();
@@ -51,12 +50,12 @@ public class MovementSystem extends ECSSystem {
         Set<Set<Position.Component>> swapsPerformed = new HashSet<>();
 
         for (int entityId : world.query(
-                Position.Component.class, Movement.Component.class, SpriteASCII.Component.class, TSSprite.Component.class)) {
+                Position.Component.class, Movement.Component.class, SpriteASCII.Component.class)) {
             Position.Component pos = world.getComponent(entityId, Position.Component.class);
             Movement.Component mov = world.getComponent(entityId, Movement.Component.class);
             SpriteASCII.Component asciiSprite = world.getComponent(entityId, SpriteASCII.Component.class);
             TSSprite.Component sprite = world.getComponent(entityId, TSSprite.Component.class);
-            if (pos == null || mov == null || asciiSprite == null || sprite == null) {
+            if (pos == null || mov == null || asciiSprite == null) {
                 continue;
             }
 
@@ -145,7 +144,7 @@ public class MovementSystem extends ECSSystem {
 
                                     grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = asciiSprite.spriteCharacter;
                                     grid.setBlocked((int) pos.xPos, (int) pos.yPos, pos.blocksTile);
-                                    if (sprite.activeSprite != null) {
+                                    if (sprite != null && sprite.activeSprite != null) {
                                         sprite.activeSprite.setPosition(pos.xPos, pos.yPos);
                                     }
 
@@ -153,7 +152,7 @@ public class MovementSystem extends ECSSystem {
                                     grid.setBlocked((int) occupying.xPos, (int) occupying.yPos, occupying.blocksTile);
 
                                     TSSprite.Component theirSprite = spriteMap.get(occupying);
-                                    if (theirSprite.activeSprite != null) {
+                                    if (theirSprite != null && theirSprite.activeSprite != null) {
                                         theirSprite.activeSprite.setPosition(occupying.xPos, occupying.yPos);
                                     }
 
@@ -185,7 +184,7 @@ public class MovementSystem extends ECSSystem {
                 movedThisFrame.add(pos);
 
                 grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = asciiSprite.spriteCharacter;
-                if (sprite.activeSprite != null) {
+                if (sprite != null && sprite.activeSprite != null) {
                     sprite.activeSprite.setPosition(pos.xPos, pos.yPos);
                 }
                 grid.setBlocked((int) pos.xPos, (int) pos.yPos, pos.blocksTile);
