@@ -10,6 +10,7 @@ import org.townsimulator.components.Task;
 import org.townsimulator.systems.MovementSystem;
 import org.townsimulator.systems.TaskSystem;
 import org.townsimulator.task.GoTo;
+import org.townsimulator.task.TaskAction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -36,7 +37,7 @@ class TaskLifecycleTest {
         );
         var task = world.getComponent(entity.id(), Task.Component.class);
         task.addAction(new GoTo(3, 3));
-        task.addAction(new GoTo(5, 5));
+        task.addAction(new FollowUpGoTo(5, 5));
 
         new TaskSystem().run(world, 0.5);
         assertEquals(RUNNING, task.status);
@@ -46,6 +47,34 @@ class TaskLifecycleTest {
 
         assertEquals(WAITING, task.status);
         assertEquals(1, task.actionQueue.size());
+
+        new TaskSystem().run(world, 0.5);
         assertTrue(world.getComponent(entity.id(), Movement.Component.class).wantsToMove);
+    }
+
+    private static final class FollowUpGoTo extends TaskAction {
+        private final int x;
+        private final int y;
+
+        private FollowUpGoTo(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public void action(World world, int entityId) {
+            var movement = world.getComponent(entityId, Movement.Component.class);
+            if (movement == null) {
+                return;
+            }
+            movement.xDst = x;
+            movement.yDst = y;
+            movement.wantsToMove = true;
+        }
+
+        @Override
+        public Integer getPriority() {
+            return 1;
+        }
     }
 }

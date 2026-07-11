@@ -32,7 +32,7 @@ public class GameLoopStore {
         if (!TownSimWorld.isRunning()) {
             return;
         }
-        if (TownSimWorld.clock().simulationTicks() > TownSimWorld.maxSimulationTicks()) {
+        if (TownSimWorld.clock().simulationTicks() >= TownSimWorld.maxSimulationTicks()) {
             return;
         }
         stepFrame(gl);
@@ -40,7 +40,7 @@ public class GameLoopStore {
 
     public static final Consumer<GameLogic> BASE_LOOP = (gl) -> {
         while (TownSimWorld.isRunning()
-                && TownSimWorld.clock().simulationTicks() <= TownSimWorld.maxSimulationTicks()) {
+                && TownSimWorld.clock().simulationTicks() < TownSimWorld.maxSimulationTicks()) {
             stepFrame(gl);
         }
     };
