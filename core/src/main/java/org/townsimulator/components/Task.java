@@ -41,7 +41,7 @@ public final class Task {
         }
 
         public boolean addAction(TaskAction action) {
-            if (actionQueue.parallelStream().filter(a -> a.getPriority().equals(action.getPriority())).toList().isEmpty()) {
+            if (actionQueue.stream().anyMatch(a -> a.getPriority().equals(action.getPriority()))) {
                 return false;
             }
             return actionQueue.add(action);

@@ -58,7 +58,7 @@ public class HungerSystem extends ECSSystem {
                 taskComponent = new Task.Component();
                 world.addComponent(entityId, taskComponent);
             }
-            taskComponent.actionQueue.add(new GoTo((int) nearest.x, (int) nearest.y));
+            taskComponent.addAction(new GoTo((int) nearest.x, (int) nearest.y));
             world.addComponent(entityId, new SeekingFood.Component());
         }
     }
