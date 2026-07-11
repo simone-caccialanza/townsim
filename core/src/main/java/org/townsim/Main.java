@@ -21,6 +21,7 @@ import org.townsimulator.game.loader.TSGameLoader;
 import java.util.List;
 
 import static org.townsimulator.game.logic.GameLogicStore.BASE_LOGIC_MOVEMENT_HUNGER_FOODSUPPLY;
+import static org.townsimulator.game.loop.GameLoopStore.SINGLE_FRAME_LOOP;
 
 /**
  * {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms.
@@ -195,7 +196,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         );
 
         var gLogic = new CollisionsGame.CollisionGameLogic(BASE_LOGIC_MOVEMENT_HUNGER_FOODSUPPLY);
-        gLoop = new CollisionsGame.CollisionGameLoop(CollisionsGame.BASE_LOOP_STEP, gLogic);
+        gLoop = new CollisionsGame.CollisionGameLoop(SINGLE_FRAME_LOOP, gLogic);
 
         GlobalGrid.getInstance().bindSprites(world);
 
