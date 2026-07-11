@@ -14,7 +14,7 @@ public interface AnnotationUtils {
 
     List<String> FILTERED_CLASS_PATH_ENTRIES = Arrays.stream(System.getProperty("java.class.path")
                     .split(System.getProperty("path.separator")))
-            .filter(p -> p.contains("town-simulator"))
+            .filter(p -> p.contains("townsim"))
             .toList();
 
     static Map<Class<? extends Annotation>, Collection<Class<?>>> loadClassesFromPackagesWithAnnotations(Collection<String> packagesPath, Collection<Class<? extends Annotation>> annotations) {
