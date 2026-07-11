@@ -17,6 +17,8 @@ import org.townsimulator.TownSimWorld;
 import org.townsimulator.components.*;
 import org.townsimulator.components.manager.SpriteManager;
 import org.townsimulator.game.loader.TSGameLoader;
+import org.townsimulator.input.PlayerMovementInput;
+import org.townsimulator.input.PlayerMovementInput.Direction;
 
 import java.util.List;
 
@@ -44,7 +46,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
     @Override
     public void create() {
-        map = new TmxMapLoader().load("C:\\Users\\simon\\IdeaProjects\\townsim\\assets\\maps\\map1.tmx");
+        map = new TmxMapLoader().load("maps/map1.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(map, 2f);
 
         playerTexture = new Texture("black-circle.png");
@@ -138,19 +140,17 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     }
 
     public boolean keyDown(int keycode) {
-        float Xstep = 960 / 30;
-        float Ystep = 640 / 20;
-
-        switch (keycode) {
-            case Input.Keys.W, Input.Keys.UP -> playerSprite.translateY(Ystep);
-            case Input.Keys.S, Input.Keys.DOWN -> playerSprite.translateY(-Ystep);
-            case Input.Keys.A, Input.Keys.LEFT -> playerSprite.translateX(-Xstep);
-            case Input.Keys.D, Input.Keys.RIGHT -> playerSprite.translateX(Xstep);
-            default -> {
-                return false;
-            }
+        Direction direction = switch (keycode) {
+            case Input.Keys.W, Input.Keys.UP -> Direction.UP;
+            case Input.Keys.S, Input.Keys.DOWN -> Direction.DOWN;
+            case Input.Keys.A, Input.Keys.LEFT -> Direction.LEFT;
+            case Input.Keys.D, Input.Keys.RIGHT -> Direction.RIGHT;
+            default -> null;
+        };
+        if (direction == null) {
+            return false;
         }
-        return true;
+        return PlayerMovementInput.apply(TownSimWorld.get(), TownSimWorld.playerEntityId(), direction);
     }
 
     public boolean keyUp(int keycode) {
