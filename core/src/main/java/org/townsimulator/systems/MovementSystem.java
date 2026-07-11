@@ -8,9 +8,13 @@ import org.townsimulator.GlobalGrid;
 import org.townsimulator.components.Movement;
 import org.townsimulator.components.Position;
 import org.townsimulator.components.SpriteASCII;
+import org.townsimulator.components.Task;
 import org.townsimulator.components.TSSprite;
 
 import java.util.*;
+
+import static org.townsimulator.components.Task.Status.FINISHED;
+import static org.townsimulator.components.Task.Status.RUNNING;
 
 import static org.townsimulator.utils.Constants.MAP_LENGTH;
 import static org.townsimulator.utils.Constants.MAP_WIDTH;
@@ -59,9 +63,7 @@ public class MovementSystem extends ECSSystem {
             if (!mov.wantsToMove || movedThisFrame.contains(pos)) continue;
 
             if ((int) pos.xPos == (int) mov.xDst && (int) pos.yPos == (int) mov.yDst) {
-                mov.wantsToMove = false;
-                mov.path = null;
-                mov.pathIndex = 0;
+                completeMovement(world, entityId, mov);
                 continue;
             }
 
@@ -189,14 +191,23 @@ public class MovementSystem extends ECSSystem {
                 grid.setBlocked((int) pos.xPos, (int) pos.yPos, pos.blocksTile);
 
                 if ((int) pos.xPos == (int) mov.xDst && (int) pos.yPos == (int) mov.yDst) {
-                    mov.wantsToMove = false;
-                    mov.path = null;
-                    mov.pathIndex = 0;
+                    completeMovement(world, entityId, mov);
                 }
             });
         }
 
         actions.forEach(Runnable::run);
+    }
+
+    private static void completeMovement(World world, int entityId, Movement.Component mov) {
+        mov.wantsToMove = false;
+        mov.path = null;
+        mov.pathIndex = 0;
+
+        Task.Component task = world.getComponent(entityId, Task.Component.class);
+        if (task != null && task.status == RUNNING) {
+            task.status = FINISHED;
+        }
     }
 
     static class AStar {
