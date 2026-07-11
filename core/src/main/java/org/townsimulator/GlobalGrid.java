@@ -45,6 +45,11 @@ public class GlobalGrid {
         return instance;
     }
 
+    public static void resetForTests() {
+        instance = null;
+        grid = null;
+    }
+
     @PostInit
     public void bindSprites() {
         bindSprites(TownSimWorld.get());

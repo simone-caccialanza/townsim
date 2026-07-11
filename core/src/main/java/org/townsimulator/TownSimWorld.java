@@ -6,7 +6,6 @@ import jecs.core.config.JecsConfig;
 import org.townsimulator.components.Age;
 import org.townsimulator.components.Building;
 import org.townsimulator.components.FoodProvider;
-import org.townsimulator.components.Grid;
 import org.townsimulator.components.Happiness;
 import org.townsimulator.components.Health;
 import org.townsimulator.components.Hunger;
@@ -46,7 +45,6 @@ public final class TownSimWorld {
                         Age.Component.class,
                         Building.Component.class,
                         FoodProvider.Component.class,
-                        Grid.Component.class,
                         Happiness.Component.class,
                         Health.Component.class,
                         Hunger.Component.class,
@@ -98,6 +96,7 @@ public final class TownSimWorld {
         running = true;
         playerEntityId = -1;
         maxSimulationTicks = 1000;
+        GlobalGrid.resetForTests();
     }
 
     public static int maxSimulationTicks() {

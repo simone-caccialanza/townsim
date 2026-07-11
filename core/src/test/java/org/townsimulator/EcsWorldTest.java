@@ -4,7 +4,7 @@ import jecs.core.World;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.townsimulator.components.Age;
-import org.townsimulator.components.Grid;
+import org.townsimulator.components.FoodProvider;
 import org.townsimulator.components.Hunger;
 import org.townsimulator.components.Movement;
 import org.townsimulator.components.Name;
@@ -42,7 +42,7 @@ class EcsWorldTest {
         world.createEntity(new Age.Component(40), new Name.Component("Simone", "sss"), new Hunger.Component());
         world.createEntity(new Age.Component(30), new Name.Component("Albano", "aaa"));
         world.createEntity(new Age.Component(20), new Hunger.Component());
-        world.createEntity(new Grid.Component(100, 100, world));
+        world.createEntity(new Position.Component(1, 1), new FoodProvider.Component(3));
 
         assertEquals(2, world.query(Age.Component.class, Name.Component.class).entityIds().size());
         assertEquals(3, world.query(Age.Component.class).entityIds().size());
