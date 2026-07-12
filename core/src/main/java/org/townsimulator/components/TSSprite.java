@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import jecs.core.ComponentBase;
 import jecs.core.annotation.JecsComponent;
 import org.annotationlib.annotations.LogField;
+import org.townsimulator.graphics.Direction4;
 
 public final class TSSprite {
 
@@ -14,24 +15,20 @@ public final class TSSprite {
     public static final class Component extends ComponentBase {
 
         @LogField
-        public Sprite[] sprites;
+        public Direction4 facing = Direction4.S;
+
+        public float lastDeltaX;
+        public float lastDeltaY;
 
         @LogField
         public Sprite activeSprite;
 
-        public Component(int size) {
-            this.sprites = new Sprite[size];
-        }
-
-        public void setSprites(Sprite[] sprites) {
-            this.sprites = sprites;
-            this.activeSprite = sprites.length > 0 ? sprites[0] : null;
-        }
-
         @Override
         protected void reset() {
-            this.sprites = new Sprite[0];
-            this.activeSprite = null;
+            facing = Direction4.S;
+            lastDeltaX = 0f;
+            lastDeltaY = 0f;
+            activeSprite = null;
         }
     }
 }

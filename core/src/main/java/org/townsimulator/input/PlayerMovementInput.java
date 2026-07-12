@@ -5,6 +5,8 @@ import org.townsimulator.GlobalGrid;
 import org.townsimulator.components.Position;
 import org.townsimulator.components.SpriteASCII;
 import org.townsimulator.components.TSSprite;
+import org.townsimulator.graphics.CharacterSpriteAnimator;
+import org.townsimulator.graphics.Direction4;
 
 public final class PlayerMovementInput {
 
@@ -28,18 +30,28 @@ public final class PlayerMovementInput {
             return false;
         }
 
+        float dx = 0f;
+        float dy = 0f;
+        switch (direction) {
+            case UP -> dy = Y_STEP;
+            case DOWN -> dy = -Y_STEP;
+            case LEFT -> dx = -X_STEP;
+            case RIGHT -> dx = X_STEP;
+        }
+
         int oldX = (int) position.xPos;
         int oldY = (int) position.yPos;
+        position.xPos += dx;
+        position.yPos += dy;
 
-        switch (direction) {
-            case UP -> position.yPos += Y_STEP;
-            case DOWN -> position.yPos -= Y_STEP;
-            case LEFT -> position.xPos -= X_STEP;
-            case RIGHT -> position.xPos += X_STEP;
+        TSSprite.Component sprite = world.getComponent(playerEntityId, TSSprite.Component.class);
+        if (sprite != null) {
+            sprite.facing = Direction4.fromKeyboard(direction);
+            CharacterSpriteAnimator.recordDelta(sprite, dx, dy);
         }
 
         syncGrid(world, playerEntityId, position, oldX, oldY);
-        syncTextureSprite(world, playerEntityId, position);
+        CharacterSpriteAnimator.syncSpritePosition(sprite, position);
         return true;
     }
 
@@ -53,12 +65,5 @@ public final class PlayerMovementInput {
             grid.cellAt((int) position.xPos, (int) position.yPos).spriteCharacter = ascii.spriteCharacter;
         }
         grid.setBlocked((int) position.xPos, (int) position.yPos, position.blocksTile);
-    }
-
-    private static void syncTextureSprite(World world, int playerEntityId, Position.Component position) {
-        TSSprite.Component sprite = world.getComponent(playerEntityId, TSSprite.Component.class);
-        if (sprite != null && sprite.activeSprite != null) {
-            sprite.activeSprite.setPosition(position.xPos, position.yPos);
-        }
     }
 }

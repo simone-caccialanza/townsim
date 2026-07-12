@@ -5,8 +5,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -15,12 +13,13 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import org.townsimulator.GlobalGrid;
 import org.townsimulator.TownSimWorld;
 import org.townsimulator.components.*;
+import org.townsimulator.components.manager.PlayerSpriteAtlas;
 import org.townsimulator.components.manager.SpriteManager;
 import org.townsimulator.game.loader.TSGameLoader;
+import org.townsimulator.graphics.CharacterSpriteAnimator;
+import org.townsimulator.graphics.Direction4;
 import org.townsimulator.input.PlayerMovementInput;
 import org.townsimulator.input.PlayerMovementInput.Direction;
-
-import java.util.List;
 
 import static org.townsimulator.game.logic.GameLogicStore.BASE_LOGIC_MOVEMENT_HUNGER_FOODSUPPLY;
 import static org.townsimulator.game.loop.GameLoopStore.SINGLE_FRAME_LOOP;
@@ -37,8 +36,6 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     private boolean isDragging = false;
     private int dragButton = -1;
 
-    private Texture playerTexture;
-    private Sprite playerSprite;
     private SpriteBatch batch;
 
     private TSGameLoader gLoader;
@@ -48,10 +45,6 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     public void create() {
         map = new TmxMapLoader().load("maps/map1.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(map, 2f);
-
-        playerTexture = new Texture("black-circle.png");
-        playerSprite = new Sprite(playerTexture);
-        playerSprite.setSize(32, 32);
 
         batch = new SpriteBatch();
 
@@ -70,13 +63,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         gLoop.step();
 
         var world = TownSimWorld.get();
-        int playerEntityId = TownSimWorld.playerEntityId();
-        if (playerEntityId >= 0) {
-            var position = world.getComponent(playerEntityId, Position.Component.class);
-            if (position != null) {
-                playerSprite.setPosition(position.xPos, position.yPos);
-            }
-        }
+        CharacterSpriteAnimator.update(world, Gdx.graphics.getDeltaTime());
 
         camera.update();
         mapRenderer.setView(camera);
@@ -92,8 +79,8 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     public void dispose() {
         map.dispose();
         mapRenderer.dispose();
-        playerTexture.dispose();
         batch.dispose();
+        PlayerSpriteAtlas.dispose();
     }
 
     @Override
@@ -172,27 +159,27 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     void createCollisionGame() {
         var world = TownSimWorld.create();
 
-        var sprites = SpriteManager.createSprite(
-            List.of("blue_man_walking_left.png",
-                "blue_man_walking_right.png",
-                "blue_man_walking_vertical.png")
+        var tsSpriteComponent = new TSSprite.Component();
+        tsSpriteComponent.facing = Direction4.S;
+        CharacterSpriteAnimator.applyFrame(tsSpriteComponent, PlayerSpriteAtlas.get());
+        CharacterSpriteAnimator.syncSpritePosition(
+                tsSpriteComponent,
+                new Position.Component(960f * 6f / 30f, 640f * 11f / 20f)
         );
-        var tsSpriteComponent = new TSSprite.Component(12);
-        tsSpriteComponent.setSprites(sprites);
 
         var player = world.createEntity(
-            new Movement.Component(32, 32, 960 * 6 / 30, 640 * 11 / 20),
-            new Position.Component(960 * 6 / 30, 640 * 11 / 20, true),
-            new SpriteASCII.Component('A'),
-            tsSpriteComponent,
-            new Hunger.Component(100.0f),
-            new Task.Component()
+                new Movement.Component(32, 32, 960 * 6 / 30, 640 * 11 / 20),
+                new Position.Component(960 * 6 / 30, 640 * 11 / 20, true),
+                new SpriteASCII.Component('A'),
+                tsSpriteComponent,
+                new Hunger.Component(100.0f),
+                new Task.Component()
         );
         TownSimWorld.setPlayerEntityId(player.id());
 
         world.createEntity(
-            new Position.Component(960 * 16 / 30, 640 * 5 / 20, true),
-            new FoodProvider.Component(1)
+                new Position.Component(960 * 16 / 30, 640 * 5 / 20, true),
+                new FoodProvider.Component(1)
         );
 
         var gLogic = new CollisionsGame.CollisionGameLogic(BASE_LOGIC_MOVEMENT_HUNGER_FOODSUPPLY);

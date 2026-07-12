@@ -19,6 +19,7 @@ import org.townsimulator.components.SpriteASCII;
 import org.townsimulator.components.TSSprite;
 import org.townsimulator.components.Task;
 import org.townsimulator.components.Thirst;
+import org.townsimulator.components.manager.PlayerSpriteAtlas;
 import org.townsimulator.systems.FoodProvidingSystem;
 import org.townsimulator.systems.HungerSystem;
 import org.townsimulator.systems.MovementSystem;
@@ -97,6 +98,7 @@ public final class TownSimWorld {
         playerEntityId = -1;
         maxSimulationTicks = 1000;
         GlobalGrid.resetForTests();
+        PlayerSpriteAtlas.resetForTests();
     }
 
     public static int maxSimulationTicks() {

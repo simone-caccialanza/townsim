@@ -10,6 +10,7 @@ import org.townsimulator.components.Position;
 import org.townsimulator.components.SpriteASCII;
 import org.townsimulator.components.Task;
 import org.townsimulator.components.TSSprite;
+import org.townsimulator.graphics.CharacterSpriteAnimator;
 
 import java.util.*;
 
@@ -129,11 +130,14 @@ public class MovementSystem extends ECSSystem {
                                     grid.cellAt((int) occupying.xPos, (int) occupying.yPos).spriteCharacter = ' ';
                                     grid.setBlocked((int) occupying.xPos, (int) occupying.yPos, false);
 
-                                    int tmpX = (int) pos.xPos, tmpY = (int) pos.yPos;
-                                    pos.xPos = occupying.xPos;
-                                    pos.yPos = occupying.yPos;
-                                    occupying.xPos = tmpX;
-                                    occupying.yPos = tmpY;
+                                    float posOldX = pos.xPos;
+                                    float posOldY = pos.yPos;
+                                    float occOldX = occupying.xPos;
+                                    float occOldY = occupying.yPos;
+                                    pos.xPos = occOldX;
+                                    pos.yPos = occOldY;
+                                    occupying.xPos = posOldX;
+                                    occupying.yPos = posOldY;
 
                                     mov.pathIndex += finalStepsTaken;
                                     theirMov.pathIndex += 1;
@@ -144,17 +148,13 @@ public class MovementSystem extends ECSSystem {
 
                                     grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = asciiSprite.spriteCharacter;
                                     grid.setBlocked((int) pos.xPos, (int) pos.yPos, pos.blocksTile);
-                                    if (sprite != null && sprite.activeSprite != null) {
-                                        sprite.activeSprite.setPosition(pos.xPos, pos.yPos);
-                                    }
+                                    updateSpriteAfterMove(sprite, pos, posOldX, posOldY);
 
                                     grid.cellAt((int) occupying.xPos, (int) occupying.yPos).spriteCharacter = theirAsciiSprite.spriteCharacter;
                                     grid.setBlocked((int) occupying.xPos, (int) occupying.yPos, occupying.blocksTile);
 
                                     TSSprite.Component theirSprite = spriteMap.get(occupying);
-                                    if (theirSprite != null && theirSprite.activeSprite != null) {
-                                        theirSprite.activeSprite.setPosition(occupying.xPos, occupying.yPos);
-                                    }
+                                    updateSpriteAfterMove(theirSprite, occupying, occOldX, occOldY);
 
                                     log.debug("Swapped {} with {}", pos, occupying);
                                 });
@@ -178,15 +178,15 @@ public class MovementSystem extends ECSSystem {
                 grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = ' ';
                 grid.setBlocked((int) pos.xPos, (int) pos.yPos, false);
 
+                float oldX = pos.xPos;
+                float oldY = pos.yPos;
                 pos.xPos = finalNextStep[0];
                 pos.yPos = finalNextStep[1];
                 mov.pathIndex += finalStepsTaken;
                 movedThisFrame.add(pos);
 
                 grid.cellAt((int) pos.xPos, (int) pos.yPos).spriteCharacter = asciiSprite.spriteCharacter;
-                if (sprite != null && sprite.activeSprite != null) {
-                    sprite.activeSprite.setPosition(pos.xPos, pos.yPos);
-                }
+                updateSpriteAfterMove(sprite, pos, oldX, oldY);
                 grid.setBlocked((int) pos.xPos, (int) pos.yPos, pos.blocksTile);
 
                 if ((int) pos.xPos == (int) mov.xDst && (int) pos.yPos == (int) mov.yDst) {
@@ -196,6 +196,15 @@ public class MovementSystem extends ECSSystem {
         }
 
         actions.forEach(Runnable::run);
+    }
+
+    private static void updateSpriteAfterMove(TSSprite.Component sprite, Position.Component position,
+                                              float oldX, float oldY) {
+        if (sprite == null || position == null) {
+            return;
+        }
+        CharacterSpriteAnimator.recordDelta(sprite, position.xPos - oldX, position.yPos - oldY);
+        CharacterSpriteAnimator.syncSpritePosition(sprite, position);
     }
 
     private static void completeMovement(World world, int entityId, Movement.Component mov) {
