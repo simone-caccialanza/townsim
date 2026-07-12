@@ -1,15 +1,21 @@
 package org.townsimulator.graphics;
 
 public enum Direction4 {
-    N(0),
-    S(1),
-    W(2),
-    E(2);
+    N(0, 0),
+    S(1, 1),
+    W(2, 2),
+    E(2, 2);
 
+    private final int sheetRow;
     private final int sheetColumn;
 
-    Direction4(int sheetColumn) {
+    Direction4(int sheetRow, int sheetColumn) {
+        this.sheetRow = sheetRow;
         this.sheetColumn = sheetColumn;
+    }
+
+    public int sheetRow() {
+        return sheetRow;
     }
 
     public int sheetColumn() {

@@ -5,6 +5,7 @@ import org.townsimulator.GlobalGrid;
 import org.townsimulator.components.Position;
 import org.townsimulator.components.SpriteASCII;
 import org.townsimulator.components.TSSprite;
+import org.townsimulator.graphics.CharacterAnimState;
 import org.townsimulator.graphics.CharacterSpriteAnimator;
 import org.townsimulator.graphics.Direction4;
 
@@ -48,6 +49,7 @@ public final class PlayerMovementInput {
         if (sprite != null) {
             sprite.facing = Direction4.fromKeyboard(direction);
             CharacterSpriteAnimator.recordDelta(sprite, dx, dy);
+            sprite.keyboardWalkTimer = CharacterSpriteAnimator.WALK_FRAME_DURATION * CharacterAnimState.WALK_FRAMES;
         }
 
         syncGrid(world, playerEntityId, position, oldX, oldY);

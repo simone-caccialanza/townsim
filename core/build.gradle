@@ -27,6 +27,8 @@ dependencies {
   testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.24.3'
 }
 
+sourceSets.test.resources.srcDirs += [ rootProject.file('assets').path ]
+
 test {
   useJUnitPlatform()
 }

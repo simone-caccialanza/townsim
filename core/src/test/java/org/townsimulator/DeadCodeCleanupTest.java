@@ -24,6 +24,17 @@ class DeadCodeCleanupTest {
     }
 
     @Test
+    void legacyPlayerSpriteAssetsAreNotReferenced() throws Exception {
+        String mainSource = Files.readString(sourcePath("org/townsim/Main.java"));
+        String spriteManagerSource = Files.readString(
+                sourcePath("org/townsimulator/components/manager/SpriteManager.java"));
+
+        assertFalse(mainSource.contains("blue_man"));
+        assertFalse(mainSource.contains("black-circle"));
+        assertFalse(spriteManagerSource.contains("createSprite"));
+    }
+
+    @Test
     void gameLogicStoreUsesRegisteredWorldSystems() throws Exception {
         String source = Files.readString(sourcePath("org/townsimulator/game/logic/GameLogicStore.java"));
 
